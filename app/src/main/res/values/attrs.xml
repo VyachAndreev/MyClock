@@ -2,5 +2,6 @@
 <resources>
     <declare-styleable name="MyClock">
         <attr name="strokeWidth" format="dimension"/>
+        <attr name="hourHandWidth" format="dimension"/>
     </declare-styleable>
 </resources>
