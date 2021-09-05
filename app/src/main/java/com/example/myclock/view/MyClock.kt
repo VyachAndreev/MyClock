@@ -86,8 +86,12 @@ class MyClock(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
     fun setTime(calendar: Calendar) {
         this.calendar = calendar
-        var seconds = calendar.get(Calendar.SECOND) + calendar.get(Calendar.MINUTE) * 60
-        var angle = seconds.toDouble() / 3_600 * 2 * PI
+        var ms = with(calendar) {
+            get(Calendar.MILLISECOND) + (
+                    get(Calendar.SECOND) + ( get(Calendar.MINUTE) + get(Calendar.HOUR) * 60 ) * 60
+                    ) * 1_000
+        }
+        var angle = ms.toDouble() / 3_600_000 * 2 * PI
         mCanvas?.let {
             Timber.i("Time: ${calendar.time}")
             it.drawLine(
@@ -100,8 +104,7 @@ class MyClock(context: Context, attrs: AttributeSet) : View(context, attrs) {
                     color = Color.BLACK
                 },
             )
-            seconds += calendar.get(Calendar.HOUR) * 3_600
-            angle = seconds.toDouble() / 43_200 * 2 * PI
+            angle = ms.toDouble() / 43_200_000 * 2 * PI
             it.drawLine(
                 cx,
                 cy,
@@ -109,8 +112,8 @@ class MyClock(context: Context, attrs: AttributeSet) : View(context, attrs) {
                 cy - radius * hourHandScaler * cos(angle).toFloat(),
                 handPaint.apply { strokeWidth = 20f },
             )
-            seconds = calendar.get(Calendar.SECOND)
-            angle = seconds.toDouble() / 60 * 2 * PI
+            ms = calendar.get(Calendar.SECOND) * 1000 + calendar.get(Calendar.MILLISECOND)
+            angle = ms.toDouble() / 60_000 * 2 * PI
             it.drawLine(
                 cx - 20f * sin(angle).toFloat(),
                 cy + 20f * cos(angle).toFloat(),
@@ -134,12 +137,9 @@ class MyClock(context: Context, attrs: AttributeSet) : View(context, attrs) {
         updating = true
         Timber.i("trying to update: $updating")
         CoroutineScope(Dispatchers.Main).launch {
-            calendar = Calendar.getInstance()
             while (updating) {
-                delay(1000)
-                calendar.timeInMillis += 1000
-                setTime(calendar)
-                Timber.i("updating")
+                delay(8)
+                invalidate()
             }
         }
     }
